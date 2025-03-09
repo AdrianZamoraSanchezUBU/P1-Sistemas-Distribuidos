@@ -1,0 +1,25 @@
+<project name="PracticaSockets" default="dist" basedir=".">
+  <description>
+    simple example build file
+  </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="doc" location="doc"/>
+
+  <target name="compile" depends="init" description="compile the source">
+    <!-- Compile the Java code from ${src} into ${build} -->
+    <javac srcdir="${src}" destdir="${build}"/>
+  </target>
+
+  <target name="doc" description="doc code">
+    <!-- Delete the ${doc} directory trees -->
+    <delete dir="${doc}"/>
+  </target>
+
+  <target name="clean" description="clean up">
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>
