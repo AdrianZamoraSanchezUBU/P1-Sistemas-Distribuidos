@@ -1,10 +1,15 @@
-package es.ubu.lsi;
-
-import java.utils.*;
+package es.ubu.lsi.common;
 
 /**
- * Interfaz de ChatMessage
+ * Enumeración de tipos de mensajes de la clase ChatMessage
+ * 
+ * Los tres tipos de mensajes definidos son:
+ * - TEXT: Mensajes enviado por el usuario
+ * - LOGOUT: Utilizado para cerrar sesión
+ * - SHUTDOWN: No se utiliza
  */
-public interface MessageType{
-
+public enum MessageType {
+    TEXT,
+    LOGOUT,
+    SHUTDOWN
 }
