@@ -5,7 +5,7 @@ import es.ubu.lsi.common.ChatMessage;
 /**
  * Interfaz de la clase cliente
  */
-public interface ChatClient  {
+public interface ChatClient {
 
 	/**
      * Inicia la conexión con el servidor
@@ -24,5 +24,5 @@ public interface ChatClient  {
     /**
      * Desconecta el cliente del servidor
      */
-    void disconect();
+    void disconnect();
 }

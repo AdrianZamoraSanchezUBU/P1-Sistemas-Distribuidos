@@ -3,7 +3,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>practicaSockets</groupId>
+  <groupId>es.ubu.lsi.ChatClient</groupId>
   <artifactId>PracticaSockets</artifactId>
   <version>1.0</version>
 
@@ -13,7 +13,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
   <dependencyManagement>
@@ -34,6 +35,7 @@
       <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
+
     <!-- Optionally: parameterized tests support -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -49,6 +51,15 @@
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.4.0</version>
+                    <executions>
+                <execution>
+                  <!-- Se ejecuta en la fase clean -->
+                  <phase>clean</phase>
+                  <goals>
+                      <goal>clean</goal>
+                  </goals>
+                </execution>
+            </executions>
         </plugin>
         <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
         <plugin>
@@ -58,11 +69,57 @@
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.13.0</version>
+          <executions>
+                <execution>
+                  <!-- Se ejecuta en la fase compile -->
+                  <phase>compile</phase>
+                  <goals>
+                      <goal>compile</goal>
+                  </goals>
+                </execution>
+            </executions>
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.3.0</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>3.1.0</version>
+            <executions>
+              <!-- Ejecución del Cliente-1 -->
+              <execution>
+                <id>cliente</id>
+                <phase>verify</phase>
+                <goals>
+                <goal>java</goal>
+                </goals>
+                <configuration>
+                  <mainClass>es.ubu.lsi.client.ChatClientImpl</mainClass>
+                  <arguments>
+                    <argument>127.0.0.1</argument>
+                    <argument>"Cliente-1"</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+
+              <!-- Ejecución del servidor -->
+              <execution>
+                <id>servidor</id>
+                <phase>verify</phase>
+                <goals>
+                <goal>java</goal>
+                </goals>
+                <configuration>
+                  <mainClass>es.ubu.lsi.server.ChatServerImpl</mainClass>
+                  <arguments>
+                    <!-- TODO -->
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.4.2</version>
