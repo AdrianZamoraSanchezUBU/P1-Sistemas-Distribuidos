@@ -1,12 +1,15 @@
 package es.ubu.lsi.common;
 
+import java.io.Serializable;
+
 /**
  * Clase de ChatMessage
  * 
  * Define como son los mensajes que se intercambian 
  * los clientes y el servidor
  */
-public class ChatMessage{
+public class ChatMessage implements Serializable {
+	private static final long serialVersionUID = 1L;
 	private String clientid;
     private MessageType type;
     private String message;

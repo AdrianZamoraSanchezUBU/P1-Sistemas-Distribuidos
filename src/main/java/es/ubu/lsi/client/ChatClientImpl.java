@@ -28,9 +28,9 @@ public class ChatClientImpl implements ChatClient {
      * Implementa la interfaz Runnable para su ejecución
      */
     protected class ChatClientListener implements Runnable {
-    	private BufferedReader in;
+    	private ObjectInputStream in;
 
-        public ChatClientListener(BufferedReader in) {
+        public ChatClientListener(ObjectInputStream in) {
             this.in = in;
         }
 
@@ -38,15 +38,17 @@ public class ChatClientImpl implements ChatClient {
 		 * Método que se ejecuta y escucha los mensajes
 	     */
         public void run() {
-            try {
-                String serverMessage;
+        	try {
+                ChatMessage serverMessage;
                 
-                // Si hay un mensaje y el cliente esta coenctado lo muestra
-                while ((serverMessage = in.readLine()) != null && carryOn) {
-                    System.out.println("Mensaje del servidor:" + serverMessage);
+                // Si hay un mensaje y el cliente está conectado, lo muestra
+                while ((serverMessage = (ChatMessage) in.readObject()) != null && carryOn) {
+                    System.out.println("Mensaje del servidor: " + serverMessage.getMessage());
                 }
             } catch (IOException e) {
-                System.out.println("Error al recibir un mensajes del server");
+                System.out.println("Error al recibir un mensaje del servidor: " + e.getMessage());
+            } catch (ClassNotFoundException e) {
+                System.out.println("Error al recibir un mensaje del servidor: " + e.getMessage());
             }
         }
     }
@@ -71,26 +73,26 @@ public class ChatClientImpl implements ChatClient {
     	try (
     			// Sockets de conexión con el servidor
                 Socket socket = new Socket(server, port);
+    			
+    			// Objeto encargado de enviar los datos
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                 
-    			// Objeto encargado de recibir los datos
-    			BufferedReader in = 
-                		new BufferedReader(
-                				new InputStreamReader(socket.getInputStream()))
+    			
             ) {
     			// TODO BORRAR, mensaje introductorio para probar cuando implemente el servidor
 	    		ChatMessage newConnectionMessage = new ChatMessage(username, MessageType.TEXT, "Conexión de: " + username);
-	    		sendMessage(newConnectionMessage);
+	    		out.writeObject(newConnectionMessage);
 
                 // Se inicia un listener para mensajes entrantes
-                Thread listenerThread = new Thread(new ChatClientListener(in));
-                listenerThread.start(); // Se inicia la escucha
+                //Thread listenerThread = new Thread(new ChatClientListener(in));
+                //listenerThread.start(); // Se inicia la escucha
 
                 // Objeto que lee de la entrada estandar los mensajes que envia el cliente
                 BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
                 
                 String userInput;
                 
-                // Funciona mientras
+                // Funciona mientras no se escriba "salir"
                 while ((userInput = stdIn.readLine()) != null) {
                     if (userInput.equalsIgnoreCase("salir")) {
                     	// En este caso desconecta el cliente
@@ -99,7 +101,7 @@ public class ChatClientImpl implements ChatClient {
                     }
                     // Genera y envia al servidor el mensaje
                     ChatMessage msg = new ChatMessage(username, MessageType.TEXT, userInput);
-    	    		sendMessage(msg);
+                    out.writeObject(newConnectionMessage);
                 }
                 
                 return true;
@@ -110,19 +112,20 @@ public class ChatClientImpl implements ChatClient {
     }
 
     public void sendMessage(ChatMessage msg) {
-    	// Comprueba que el clietne no está desconectado
-    	if (!carryOn) {
+        // Comprueba que el cliente no está desconectado
+        if (!carryOn) {
             System.out.println("Un cliente desconectado no puede mandar mensajes al servidor");
             return;
         }
-    	
+        
         try (
-        	// Se genera una forma de envio al servidor
+            // Se genera una forma de envío al servidor
             Socket socket = new Socket(server, port);
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())
         ) {
-        	// Se envía el objeto al servidor
+            // Se envía el objeto al servidor
             out.writeObject(msg);
+            out.flush();
         } catch (IOException e) {
             System.out.println("Error al enviar el mensaje");
         }
@@ -142,7 +145,7 @@ public class ChatClientImpl implements ChatClient {
     	// Comprueba que los argumentos de entrada sean correctos
 		if (args.length < 2) {
 			System.out.println("Error, no hay suficientes parámetros para crear un cliente");
-		     return;
+		    return;
 		}
 		 
 		// Inicializa el cliente con los datos de los parámetros
