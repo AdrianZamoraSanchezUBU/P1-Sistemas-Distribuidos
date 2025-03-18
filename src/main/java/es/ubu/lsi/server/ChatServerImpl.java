@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -37,7 +39,7 @@ public class ChatServerImpl implements ChatServer{
     	private int id;
     	private String username;
     	private Socket clientSocket;
-        private PrintWriter out;
+        private ObjectOutputStream out;
     	
     	/**
     	 * Constructor de la clase
@@ -55,9 +57,14 @@ public class ChatServerImpl implements ChatServer{
          * 
          * @param message
          */
-        public void sendMessage(String message) {
+        public void sendMessage(ChatMessage message) {
             if (out != null) {
-                out.println(message);
+                try {
+					out.writeObject(message);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             }
         }
     	
@@ -66,19 +73,24 @@ public class ChatServerImpl implements ChatServer{
 	     */
         public void run() {
             try (
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            		ObjectInputStream  in = new ObjectInputStream(clientSocket.getInputStream());
+            		
             ) {
-                out = new PrintWriter(clientSocket.getOutputStream(), true);
-                System.out.println("Cliente conectado: " + clientSocket.getInetAddress() + "/" + clientSocket.getPort());
-
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    System.out.println("Mensaje de " + clientSocket.getPort() + ": " + inputLine);
-                    broadcast(new ChatMessage(username, MessageType.TEXT, inputLine));
-                }
+	                out = new ObjectOutputStream(clientSocket.getOutputStream());
+	                System.out.println("Cliente conectado: " + clientSocket.getInetAddress() + "/" + clientSocket.getPort());
+	
+	                while (true) {
+	                	// Deserializar el objeto ChatMessage
+	                    ChatMessage chatMessage = (ChatMessage) in.readObject();
+	                    System.out.println("Mensaje de " + clientSocket.getPort() + ": " + chatMessage.getMessage());
+	                    broadcast(new ChatMessage(username, MessageType.TEXT, chatMessage.getMessage()));
+	                }
             } catch (IOException e) {
                 System.out.println("Error I/O: " + e.getMessage());
-            } finally {
+            } catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
                 remove(id);
                 try {
                     clientSocket.close();
@@ -104,7 +116,7 @@ public class ChatServerImpl implements ChatServer{
 
 	public void startup() {
 		try  (
-            	ServerSocket serverSocket = new ServerSocket(port);
+        	ServerSocket serverSocket = new ServerSocket(port);
    		)
         {
 			while (true){
@@ -114,11 +126,12 @@ public class ChatServerImpl implements ChatServer{
 	        	
 	        	ServerThreadForClient hilonuevocliente = new ServerThreadForClient(clientSocket, clientid++);
 	        	
-	        	hilonuevocliente.run();
-            }
+	        	clients.put(hilonuevocliente.id, hilonuevocliente);
+	        	hilonuevocliente.start();
+			}
         } catch (IOException e) {
-            System.out.println("Exception caught when trying to listen on port " + port + " or listening for a connection");
-            System.out.println(e.getMessage());
+        	System.out.println("Exception caught when trying to listen on port " + port + " or listening for a connection");
+        	System.out.println(e.getMessage());
         }
 		
 	}
@@ -132,7 +145,7 @@ public class ChatServerImpl implements ChatServer{
         System.out.println("Mensaje patrocinado por Adrián: " + message.getMessage());
         
         for (ServerThreadForClient client : clients.values()) {
-            client.sendMessage(message.getMessage());
+            client.sendMessage(message);
         }
     }
 

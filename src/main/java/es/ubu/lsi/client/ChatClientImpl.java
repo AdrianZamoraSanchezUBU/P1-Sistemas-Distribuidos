@@ -79,13 +79,11 @@ public class ChatClientImpl implements ChatClient {
                 
     			
             ) {
-    			// TODO BORRAR, mensaje introductorio para probar cuando implemente el servidor
-	    		ChatMessage newConnectionMessage = new ChatMessage(username, MessageType.TEXT, "Conexión de: " + username);
-	    		out.writeObject(newConnectionMessage);
-
+    			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+    		
                 // Se inicia un listener para mensajes entrantes
-                //Thread listenerThread = new Thread(new ChatClientListener(in));
-                //listenerThread.start(); // Se inicia la escucha
+                Thread listenerThread = new Thread(new ChatClientListener(in));
+                listenerThread.start(); // Se inicia la escucha
 
                 // Objeto que lee de la entrada estandar los mensajes que envia el cliente
                 BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
@@ -101,7 +99,8 @@ public class ChatClientImpl implements ChatClient {
                     }
                     // Genera y envia al servidor el mensaje
                     ChatMessage msg = new ChatMessage(username, MessageType.TEXT, userInput);
-                    out.writeObject(newConnectionMessage);
+                    out.writeObject(msg);
+                    System.out.println("Mensaje enviado");
                 }
                 
                 return true;

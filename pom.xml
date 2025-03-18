@@ -90,7 +90,7 @@
             <executions>
               <!-- Ejecución del Cliente-1 -->
               <execution>
-                <id>cliente</id>
+                <id>cliente1</id>
                 <phase>verify</phase>
                 <goals>
                 <goal>java</goal>
@@ -100,6 +100,23 @@
                   <arguments>
                     <argument>127.0.0.1</argument>
                     <argument>"Cliente-1"</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+
+
+              <!-- Ejecución del Cliente-2 -->
+              <execution>
+                <id>cliente2</id>
+                <phase>verify</phase>
+                <goals>
+                <goal>java</goal>
+                </goals>
+                <configuration>
+                  <mainClass>es.ubu.lsi.client.ChatClientImpl</mainClass>
+                  <arguments>
+                    <argument>127.0.0.1</argument>
+                    <argument>"Cliente-2"</argument>
                   </arguments>
                 </configuration>
               </execution>
