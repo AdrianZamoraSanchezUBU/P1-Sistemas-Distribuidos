@@ -13,6 +13,8 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import es.ubu.lsi.common.ChatMessage;
 import es.ubu.lsi.common.MessageType;
@@ -79,7 +81,7 @@ public class ChatServerImpl implements ChatServer{
 	                out = new ObjectOutputStream(clientSocket.getOutputStream());
 	                System.out.println("Cliente conectado: " + clientSocket.getInetAddress() + "/" + clientSocket.getPort());
 	
-	                while (true) {
+	                while (true && alive == true) {
 	                	// Deserializar el objeto ChatMessage
 	                    ChatMessage chatMessage = (ChatMessage) in.readObject();
 	                    System.out.println("Mensaje de " + clientSocket.getPort() + ": " + chatMessage.getMessage());
@@ -115,26 +117,56 @@ public class ChatServerImpl implements ChatServer{
     }
 
 	public void startup() {
-		try  (
-        	ServerSocket serverSocket = new ServerSocket(port);
-   		)
-        {
-			while (true){
-	            Socket clientSocket = serverSocket.accept();
+		try (
+				ServerSocket serverSocket = new ServerSocket(port);
+				
+
+			)
+        	{
+	            // Iniciar hilo separado para leer comandos desde la consola
+	            new Thread(this::readServerCommands).start();
 	            
-	        	System.out.println("Nuevo Cliente: " + clientSocket.getInetAddress() + "/" + clientSocket.getPort());
-	        	
-	        	ServerThreadForClient hilonuevocliente = new ServerThreadForClient(clientSocket, clientid++);
-	        	
-	        	clients.put(hilonuevocliente.id, hilonuevocliente);
-	        	hilonuevocliente.start();
-			}
-        } catch (IOException e) {
-        	System.out.println("Exception caught when trying to listen on port " + port + " or listening for a connection");
-        	System.out.println(e.getMessage());
-        }
-		
+				while (true && alive == true){
+		            Socket clientSocket = serverSocket.accept();
+		            
+		        	System.out.println("Nuevo Cliente: " + clientSocket.getInetAddress() + "/" + clientSocket.getPort());
+		        	
+		        	ServerThreadForClient hilonuevocliente = new ServerThreadForClient(clientSocket, clientid++);
+		        	
+		        	clients.put(hilonuevocliente.id, hilonuevocliente);
+		        	hilonuevocliente.start();
+				}
+	        } catch (IOException e) {
+	        	System.out.println("Exception caught when trying to listen on port " + port + " or listening for a connection");
+	        	System.out.println(e.getMessage());
+	        }
 	}
+	
+	private void readServerCommands() {
+        try (
+        		BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in))
+        	) 
+        	{
+	            String userInput;
+	            Pattern banPattern = Pattern.compile("^ban (\\d+)$", Pattern.CASE_INSENSITIVE);
+
+	            while ((userInput = stdIn.readLine()) != null) {
+	                if (userInput.equalsIgnoreCase("shutdown")) {
+	                    shutdown();
+	                    break;
+	                }
+	
+	                Matcher matcher = banPattern.matcher(userInput);
+	                if (matcher.matches()) {
+	                    int userId = Integer.parseInt(matcher.group(1));
+	                    System.out.println("Baneando al usuario con ID: " + userId);
+	                    remove(userId);
+	                }
+	            }
+	        } catch (IOException e) {
+	            System.out.println("Error leyendo comandos del servidor: " + e.getMessage());
+	        }
+    }
 
 	public void shutdown() {
 		alive = false;
@@ -150,8 +182,12 @@ public class ChatServerImpl implements ChatServer{
     }
 
 	public void remove(int id) {
-		clients.remove(id);
-        System.out.println("Cliente con ID:" + Integer.toString(id) + " eliminado");
+		// Se comprueba si se puede eliminar al cliente
+		if(clients.remove(id) != null) {
+			System.out.println("Cliente con ID:" + Integer.toString(id) + " eliminado");
+		}else {
+			System.out.println("No se ha podido banear al cliente con ID: " + Integer.toString(id));
+		}
 	}
 	
 	/**

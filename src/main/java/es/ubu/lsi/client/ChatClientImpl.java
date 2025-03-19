@@ -76,8 +76,6 @@ public class ChatClientImpl implements ChatClient {
     			
     			// Objeto encargado de enviar los datos
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                
-    			
             ) {
     			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
     		
