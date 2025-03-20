@@ -7,9 +7,12 @@ package es.ubu.lsi.common;
  * - TEXT: Mensajes enviado por el usuario
  * - LOGOUT: Utilizado para cerrar sesión
  * - SHUTDOWN: No se utiliza
+ * - BAN: Para banear a otro cliente
  */
 public enum MessageType {
     TEXT,
     LOGOUT,
-    SHUTDOWN
+    SHUTDOWN,
+    BAN,
+    HANDSHAKE // Igual no me hace falta...
 }

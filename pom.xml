@@ -99,7 +99,7 @@
                   <mainClass>es.ubu.lsi.client.ChatClientImpl</mainClass>
                   <arguments>
                     <argument>127.0.0.1</argument>
-                    <argument>"Cliente-1"</argument>
+                    <argument>"Cliente1"</argument>
                   </arguments>
                 </configuration>
               </execution>
@@ -116,7 +116,7 @@
                   <mainClass>es.ubu.lsi.client.ChatClientImpl</mainClass>
                   <arguments>
                     <argument>127.0.0.1</argument>
-                    <argument>"Cliente-2"</argument>
+                    <argument>"Cliente2"</argument>
                   </arguments>
                 </configuration>
               </execution>

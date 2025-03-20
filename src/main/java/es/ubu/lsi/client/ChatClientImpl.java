@@ -19,6 +19,8 @@ public class ChatClientImpl implements ChatClient {
     private boolean carryOn;
     private int id;
     
+    ObjectOutputStream out;
+    
     private final static int DEFAULT_SERVER_PORT = 1500;
     private static int clientCounter = 0;
 
@@ -43,7 +45,22 @@ public class ChatClientImpl implements ChatClient {
                 
                 // Si hay un mensaje y el cliente está conectado, lo muestra
                 while ((serverMessage = (ChatMessage) in.readObject()) != null && carryOn) {
-                    System.out.println("Mensaje del servidor: " + serverMessage.getMessage());
+ 
+                	// Se comoprueba el tipo de mensaje
+	                switch (serverMessage.getType()) {
+					    case TEXT:
+					    	System.out.println(serverMessage.getMessage());
+					        break;
+					    case LOGOUT:
+					        System.out.println("Has sido desconectado por el servidor.");
+					        disconnect();
+					        return;
+					    case SHUTDOWN:
+					        System.out.println("El servidor ha sido desconectado.");
+					        return;
+					    default:
+					    	break;
+                	}
                 }
             } catch (IOException e) {
                 System.out.println("Error al recibir un mensaje del servidor: " + e.getMessage());
@@ -69,57 +86,65 @@ public class ChatClientImpl implements ChatClient {
     	this.id = clientCounter++;
     }
 
-    public boolean start(){
-    	try (
-    			// Sockets de conexión con el servidor
-                Socket socket = new Socket(server, port);
-    			
-    			// Objeto encargado de enviar los datos
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ) {
-    			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-    		
-                // Se inicia un listener para mensajes entrantes
-                Thread listenerThread = new Thread(new ChatClientListener(in));
-                listenerThread.start(); // Se inicia la escucha
+    public boolean start() {
+        try {
+        	Socket socket = new Socket(server, port);
+        	
+        	out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+            		
+            // Iniciar listener para mensajes entrantes
+            Thread listenerThread = new Thread(new ChatClientListener(in));
+            listenerThread.start();
 
-                // Objeto que lee de la entrada estandar los mensajes que envia el cliente
-                BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-                
-                String userInput;
-                
-                // Funciona mientras no se escriba "salir"
-                while ((userInput = stdIn.readLine()) != null) {
-                    if (userInput.equalsIgnoreCase("salir")) {
-                    	// En este caso desconecta el cliente
-                        disconnect();
-                        break;
-                    }
-                    // Genera y envia al servidor el mensaje
-                    ChatMessage msg = new ChatMessage(username, MessageType.TEXT, userInput);
-                    out.writeObject(msg);
-                    System.out.println("Mensaje enviado");
+            // Leer mensajes desde la consola
+            BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+            String userInput;
+
+            while ((userInput = stdIn.readLine()) != null) {
+                if (userInput.equalsIgnoreCase("salir")) {
+                    // Enviar mensaje de LOGOUT al servidor
+                    ChatMessage logoutMessage = new ChatMessage(username, id, MessageType.LOGOUT, "Desconectado");
+                    out.writeObject(logoutMessage);
+                    out.flush();
+                    disconnect();
+                    break;
                 }
-                
-                return true;
-	    	} catch (IOException e) {
-	            System.out.println("Error al conectar con el servidor de chat: " + server + "::" + Integer.toString(port));
-	            return false;
-	    	}
+
+                ChatMessage msg;
+                if (userInput.toLowerCase().startsWith("ban ")) {
+                    String bannedUser = userInput.substring(4).trim();
+                    if (!bannedUser.isEmpty()) {
+                        msg = new ChatMessage(username, id, MessageType.BAN, bannedUser);
+                    } else {
+                        System.out.println("Error, el mensaje de ban debe ser: ban <nombre>");
+                        continue;
+                    }
+                } else {
+                    // Mensaje normal de texto
+                    msg = new ChatMessage(username, id, MessageType.TEXT, userInput);
+                    System.out.print("Mensaje normal");
+                }
+
+                // Enviar el mensaje al servidor
+                sendMessage(msg);
+            }
+
+            return true;
+        } catch (IOException e) {
+            System.out.println("Error al conectar con el servidor: " + e.getMessage());
+            return false;
+        }
     }
 
     public void sendMessage(ChatMessage msg) {
         // Comprueba que el cliente no está desconectado
-        if (!carryOn) {
+        if (carryOn == false) {
             System.out.println("Un cliente desconectado no puede mandar mensajes al servidor");
             return;
         }
         
-        try (
-            // Se genera una forma de envío al servidor
-            Socket socket = new Socket(server, port);
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())
-        ) {
+        try {
             // Se envía el objeto al servidor
             out.writeObject(msg);
             out.flush();

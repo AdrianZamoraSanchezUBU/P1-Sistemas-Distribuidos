@@ -31,6 +31,7 @@ public class ChatServerImpl implements ChatServer{
     private boolean alive;
     
     private final Map<Integer, ServerThreadForClient> clients = new HashMap<>();
+    private final Map<Integer, Integer> bannedClients = new HashMap<>();
     
     /**
      * Clase interna que escucha los mensajes que vienen del servidor
@@ -42,6 +43,7 @@ public class ChatServerImpl implements ChatServer{
     	private String username;
     	private Socket clientSocket;
         private ObjectOutputStream out;
+        private boolean running = true;
     	
     	/**
     	 * Constructor de la clase
@@ -49,8 +51,9 @@ public class ChatServerImpl implements ChatServer{
     	 * @param socket Socket del cliente
     	 * @param id	 ID del cliente
     	 */
-        public ServerThreadForClient(Socket socket, int id) {
+        public ServerThreadForClient(Socket socket, int id, String username) {
             this.clientSocket = socket;
+            this.username = username;
             this.id = id;
         }
         
@@ -69,6 +72,20 @@ public class ChatServerImpl implements ChatServer{
 				}
             }
         }
+        
+        /**
+         * 
+         */
+        public long getId() {
+        	return id;
+        }
+        
+        /**
+         * 
+         */
+        public String getUsername(){
+        	return username;
+        }
     	
     	/**
 		 * Método que se ejecuta y escucha/envia los mensajes
@@ -81,27 +98,45 @@ public class ChatServerImpl implements ChatServer{
 	                out = new ObjectOutputStream(clientSocket.getOutputStream());
 	                System.out.println("Cliente conectado: " + clientSocket.getInetAddress() + "/" + clientSocket.getPort());
 	
-	                while (true && alive == true) {
-	                	// Deserializar el objeto ChatMessage
-	                    ChatMessage chatMessage = (ChatMessage) in.readObject();
-	                    System.out.println("Mensaje de " + clientSocket.getPort() + ": " + chatMessage.getMessage());
-	                    broadcast(new ChatMessage(username, MessageType.TEXT, chatMessage.getMessage()));
+	                while (running) {
+						// Deserializar el objeto ChatMessage
+						ChatMessage chatMessage = (ChatMessage) in.readObject();
+						
+						switch (chatMessage.getType()) {
+						    case TEXT:
+						        System.out.println("Mensaje de " + id + ": " + chatMessage.getMessage());
+						        broadcast(chatMessage);
+						        break;
+						    case BAN:
+						        System.out.println(id + " ha baneado a " + chatMessage.getMessage());
+						        ban(chatMessage.getMessage(), id);
+						        break;
+						    case LOGOUT:
+						        System.out.println(id + " se ha desconectado");
+						        remove(id);
+						        return;
+						    default:
+						    	break;
+						}
 	                }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 System.out.println("Error I/O: " + e.getMessage());
-            } catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			} finally {
                 remove(id);
+                
                 try {
                     clientSocket.close();
                 } catch (IOException e) {
                     System.out.println("Error al cerrar socket: " + e.getMessage());
                 }
-                System.out.println("Cliente desconectado: " + clientSocket.getInetAddress() + "/" + clientSocket.getPort());
+                System.out.println("Cliente desconectado con ID: " + id);
             }
         }
+
+		// Método para detener el hilo
+	    public void stopRunning() {
+	        running = false;
+	    }
     }
 		    
     
@@ -119,8 +154,6 @@ public class ChatServerImpl implements ChatServer{
 	public void startup() {
 		try (
 				ServerSocket serverSocket = new ServerSocket(port);
-				
-
 			)
         	{
 	            // Iniciar hilo separado para leer comandos desde la consola
@@ -129,15 +162,14 @@ public class ChatServerImpl implements ChatServer{
 				while (true && alive == true){
 		            Socket clientSocket = serverSocket.accept();
 		            
-		        	System.out.println("Nuevo Cliente: " + clientSocket.getInetAddress() + "/" + clientSocket.getPort());
+		        	System.out.println("Nuevo Cliente: " + clientSocket.getInetAddress() + "/" + clientSocket.getPort() + " \"" + "TODO" + '"');
 		        	
-		        	ServerThreadForClient hilonuevocliente = new ServerThreadForClient(clientSocket, clientid++);
+		        	ServerThreadForClient hilonuevocliente = new ServerThreadForClient(clientSocket, clientid++, "TODO");
 		        	
 		        	clients.put(hilonuevocliente.id, hilonuevocliente);
 		        	hilonuevocliente.start();
 				}
 	        } catch (IOException e) {
-	        	System.out.println("Exception caught when trying to listen on port " + port + " or listening for a connection");
 	        	System.out.println(e.getMessage());
 	        }
 	}
@@ -148,7 +180,7 @@ public class ChatServerImpl implements ChatServer{
         	) 
         	{
 	            String userInput;
-	            Pattern banPattern = Pattern.compile("^ban (\\d+)$", Pattern.CASE_INSENSITIVE);
+	            Pattern removePattern = Pattern.compile("^remove (\\d+)$", Pattern.CASE_INSENSITIVE);
 
 	            while ((userInput = stdIn.readLine()) != null) {
 	                if (userInput.equalsIgnoreCase("shutdown")) {
@@ -156,10 +188,10 @@ public class ChatServerImpl implements ChatServer{
 	                    break;
 	                }
 	
-	                Matcher matcher = banPattern.matcher(userInput);
+	                Matcher matcher = removePattern.matcher(userInput);
+	                
 	                if (matcher.matches()) {
 	                    int userId = Integer.parseInt(matcher.group(1));
-	                    System.out.println("Baneando al usuario con ID: " + userId);
 	                    remove(userId);
 	                }
 	            }
@@ -167,14 +199,49 @@ public class ChatServerImpl implements ChatServer{
 	            System.out.println("Error leyendo comandos del servidor: " + e.getMessage());
 	        }
     }
+	
+	/**
+	 * Función que establece un baneo entre dos clietnes
+	 * 
+	 * @param clientName Nombre del usuario baneado
+	 * @param bannerId   ID del usuario que banea
+	 */
+	public void ban(String clientName, int bannerId) {
+        
+		ServerThreadForClient bannedClient = null;
+        
+        for (ServerThreadForClient client : clients.values()) {
+            if (client.getUsername().equalsIgnoreCase(clientName)) {
+                bannedClient = client;
+                break;
+            }
+        }
+
+        if (bannedClient != null) {
+            bannedClients.put(bannerId, (int) bannedClient.getId());
+            System.out.println(clientName + " ha sido baneado por ID: " + bannerId);
+        } else {
+            System.out.println("No se encontró el usuario " + clientName);
+        }
+    }
 
 	public void shutdown() {
 		alive = false;
 		System.out.println("Servidor apagado");
+		
+		ChatMessage desconectionMessage = new ChatMessage("server", -1, MessageType.SHUTDOWN, "Servidor apagado");
+		
+		// Se envia una señal de desconexión a los clientes
+		for (ServerThreadForClient client : clients.values()) {
+            client.sendMessage(desconectionMessage);
+        }
 	}
 
 	public void broadcast(ChatMessage message) {
-        System.out.println("Mensaje patrocinado por Adrián: " + message.getMessage());
+		String msg = "<Mensaje patrocinado por Adrián> " + message.getClientName() + ": " + message.getMessage();
+		
+		message.setMessage(msg);
+        System.out.println("Reenviado mensaje de cliente con id " + message.getClientid());
         
         for (ServerThreadForClient client : clients.values()) {
             client.sendMessage(message);
@@ -183,8 +250,16 @@ public class ChatServerImpl implements ChatServer{
 
 	public void remove(int id) {
 		// Se comprueba si se puede eliminar al cliente
-		if(clients.remove(id) != null) {
-			System.out.println("Cliente con ID:" + Integer.toString(id) + " eliminado");
+	    ServerThreadForClient client = clients.remove(id); // Se obtiene el ID
+	    if (client != null) {
+	        System.out.println("Cliente con ID: " + id + " eliminado");
+
+	        // Se envia un mensaje de desconexión
+	        ChatMessage logoutMessage = new ChatMessage("server", -1, MessageType.LOGOUT, "Has sido eliminado del servidor.");
+
+	        // Se envia el mensaje al cliente eliminado
+	        client.sendMessage(logoutMessage);
+	        client.stopRunning();
 		}else {
 			System.out.println("No se ha podido banear al cliente con ID: " + Integer.toString(id));
 		}
