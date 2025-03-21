@@ -8,7 +8,7 @@ import es.ubu.lsi.common.ChatMessage;
 public interface ChatClient {
 
 	/**
-     * Inicia la conexión con el servidor
+     * Inicia la conexión con el servidor y hace el handshake
      * 
      * @return Devuelve true si la conexión se inicia correctamente 
      */

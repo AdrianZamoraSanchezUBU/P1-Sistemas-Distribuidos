@@ -4,15 +4,18 @@ package es.ubu.lsi.common;
  * Enumeración de tipos de mensajes de la clase ChatMessage
  * 
  * Los tres tipos de mensajes definidos son:
- * - TEXT: Mensajes enviado por el usuario
- * - LOGOUT: Utilizado para cerrar sesión
+ * - TEXT: Para enviar mensajes entre servidor y cliente
+ * - LOGOUT: Ppara cerrar sesión
  * - SHUTDOWN: No se utiliza
  * - BAN: Para banear a otro cliente
+ * - UNBAN: Para desbanear a un cliente baneado anteriormente
+ * - HANDSHAKE: Para intercambiar información al inicio de la conexión
  */
 public enum MessageType {
     TEXT,
     LOGOUT,
     SHUTDOWN,
     BAN,
-    HANDSHAKE // Igual no me hace falta...
+    UNBAN,
+    HANDSHAKE
 }
