@@ -11,6 +11,8 @@ import es.ubu.lsi.common.*;
  * 
  * Esta clase realiza las comunicaciones del cliente con el servidor
  * de chat, enviando y recibiendo los mensajes
+ * 
+ * @author Adrián Zamora Sánchez (azs1004@alu.ubu.es)
  */
 public class ChatClientImpl implements ChatClient {
     private final static int DEFAULT_SERVER_PORT = 1500;
@@ -104,7 +106,7 @@ public class ChatClientImpl implements ChatClient {
     /**
      * Setter para id
      * 
-     * @param id
+     * @param id Identificador que se asigna al listener del cliente
      */
     public void setid(int id) {
     	this.id = id; 

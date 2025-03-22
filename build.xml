@@ -1,25 +1,87 @@
 <project name="PracticaSockets" default="dist" basedir=".">
   <description>
-    simple example build file
+    Fichero build para ANT, permite ejecutar el servidor y los clientes.
+    También puede generar la documentación
   </description>
+
   <!-- set global properties for this build -->
-  <property name="src" location="src"/>
-  <property name="build" location="build"/>
-  <property name="doc" location="doc"/>
+  <property name="src.dir" value="src/main/java"/>
+  <property name="build.dir" value="target"/>
+  <property name="classes.dir" value="${build.dir}/classes"/>
+  <property name="doc.dir" value="${build.dir}/site/apidocs"/>
+  <property name="jar.file" value="${build.dir}/PracticaSockets.jar"/>
+  <property name="main.class.server" value="es.ubu.lsi.server.ChatServerImpl"/>
+  <property name="main.class.client" value="es.ubu.lsi.client.ChatClientImpl"/>
 
-  <target name="compile" depends="init" description="compile the source">
-    <!-- Compile the Java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}"/>
+  <!-- Limpiar -->
+  <target name="clean">
+    <delete dir="${build.dir}"/>
   </target>
 
-  <target name="doc" description="doc code">
-    <!-- Delete the ${doc} directory trees -->
-    <delete dir="${doc}"/>
+  <!-- Generación de la estructura de directorios -->
+  <target name="prepare">
+    <mkdir dir="${classes.dir}"/>
+    <mkdir dir="${doc.dir}"/>
   </target>
 
-  <target name="clean" description="clean up">
-    <!-- Delete the ${build} and ${dist} directory trees -->
-    <delete dir="${build}"/>
-    <delete dir="${dist}"/>
+  <!-- Compilar -->
+  <target name="compile" depends="prepare">
+    <javac srcdir="${src.dir}" destdir="${classes.dir}" encoding="UTF-8">
+    </javac>
+  </target>
+
+  <!-- Generar Javadoc -->
+  <target name="javadoc" depends="compile">
+    <javadoc destdir="${doc.dir}" encoding="UTF-8" charset="UTF-8" docencoding="UTF-8" source="1.8" use="true" windowtitle="Documentación de PracticaSockets">
+      <sourcepath>
+        <pathelement path="${src.dir}"/>
+      </sourcepath>
+      <classpath>
+        <pathelement path="${classes.dir}"/>
+      </classpath>
+      <fileset dir="${src.dir}" includes="**/*.java"/>
+      <doctitle><![CDATA[<h1>Documentación de PracticaSockets</h1>]]></doctitle>
+      <bottom><![CDATA[<i>Generado por ANT.</i>]]></bottom>
+    </javadoc>
+  </target>
+
+  <!-- Empaquetar en un JAR -->
+  <target name="jar" depends="compile">
+    <jar destfile="${jar.file}" basedir="${classes.dir}">
+      <manifest>
+        <attribute name="Main-Class" value="${main.class.server}"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <!-- Ejecutar Servidor -->
+  <target name="run-server" depends="compile">
+    <java classname="${main.class.server}" fork="true">
+      <classpath>
+        <pathelement path="${classes.dir}"/>
+      </classpath>
+    </java>
+  </target>
+
+  <!-- Ejecutar Cliente 1 -->
+  <target name="run-client1" depends="compile">
+    <java classname="${main.class.client}" fork="true">
+      <classpath>
+        <pathelement path="${classes.dir}"/>
+      </classpath>
+      <arg value="127.0.0.1"/>
+      <arg value="Cliente1"/>
+    </java>
+  </target>
+
+  <!-- Ejecutar Cliente 2 -->
+  <target name="run-client2" depends="compile">
+    <java classname="${main.class.client}" fork="true">
+      <classpath>
+        <pathelement path="${classes.dir}"/>
+      </classpath>
+      <arg value="127.0.0.1"/>
+      <arg value="Cliente2"/>
+    </java>
   </target>
 </project>

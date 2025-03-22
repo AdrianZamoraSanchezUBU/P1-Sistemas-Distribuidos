@@ -18,6 +18,8 @@ import es.ubu.lsi.common.MessageType;
 
 /**
  * Interfaz para el servirdor de chat
+ * 
+ * @author Adrián Zamora Sánchez (azs1004@alu.ubu.es)
  */
 public class ChatServerImpl implements ChatServer{
     private final int DEFAULT_PORT = 1500;
@@ -250,8 +252,8 @@ public class ChatServerImpl implements ChatServer{
 	/**
 	 * Función que establece un baneo entre dos clietnes
 	 * 
-	 * @param clientName Nombre del usuario baneado
-	 * @param bannerId   ID del usuario que banea
+	 * @param bannedClient Nombre del usuario baneado
+	 * @param bannerClient ID del usuario que banea
 	 */
 	public void ban(String bannedClient, String bannerClient) {
 	    // Verifica que el cliente no se banee a si mismo
@@ -274,8 +276,8 @@ public class ChatServerImpl implements ChatServer{
 	/**
 	 * Función que desbanea a un cliente previamente baneado
 	 * 
-	 * @param clientName Nombre del usuario baneado
-	 * @param bannerId   ID del usuario que banea
+	 * @param unbannedClient Nombre del usuario baneado
+	 * @param bannerClient   ID del usuario que banea
 	 */
 	public void unban(String unbannedClient, String bannerClient) {
 		// Verificar si el usuario estaba baneado anteriormente
@@ -334,6 +336,11 @@ public class ChatServerImpl implements ChatServer{
         }
     }
 
+	/**
+     * Método que elimina a un cliente
+     * 
+     * @param id Identificador del cliente cuya conexión se elimina
+     */
 	public void remove(int id) {
 		// Se comprueba si se puede eliminar al cliente y se obtiene su ID
 	    ServerThreadForClient client = clients.remove(id);

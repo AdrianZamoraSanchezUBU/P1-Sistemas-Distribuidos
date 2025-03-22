@@ -8,8 +8,7 @@
   <version>1.0</version>
 
   <name>PracticaSockets</name>
-  <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
+  <url>https://github.com/AdrianZamoraSanchezUBU/P1-Sistemas-Distribuidos</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -131,7 +130,7 @@
                 <configuration>
                   <mainClass>es.ubu.lsi.server.ChatServerImpl</mainClass>
                   <arguments>
-                    <!-- TODO -->
+                    <!-- No recibe argumentos -->
                   </arguments>
                 </configuration>
               </execution>
@@ -141,6 +140,31 @@
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.4.2</version>
         </plugin>
+
+        <!-- Plugin para generar documentación Javadoc -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.4.1</version>
+          <executions>
+            <execution>
+              <id>javadoc</id>
+              <phase>package</phase>
+              <goals>
+                <goal>javadoc</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <encoding>UTF-8</encoding>
+            <docencoding>UTF-8</docencoding>
+            <charSet>UTF-8</charSet>
+            <author>true</author>
+            <version>true</version>
+            <failOnError>false</failOnError>
+          </configuration>
+        </plugin>
+
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
           <version>3.1.2</version>

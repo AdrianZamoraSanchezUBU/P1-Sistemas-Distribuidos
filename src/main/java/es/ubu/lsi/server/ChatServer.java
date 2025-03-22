@@ -4,6 +4,8 @@ import es.ubu.lsi.common.ChatMessage;
 
 /**
  * Clase del servidor de chat por sockets
+ * 
+ * @author Adrián Zamora Sánchez (azs1004@alu.ubu.es)
  */
 public interface ChatServer {
 	/**

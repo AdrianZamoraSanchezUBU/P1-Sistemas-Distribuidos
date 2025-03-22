@@ -7,6 +7,8 @@ import java.io.Serializable;
  * 
  * Define como son los mensajes que se intercambian 
  * los clientes y el servidor. Es serializable.
+ * 
+ * @author Adrián Zamora Sánchez (azs1004@alu.ubu.es)
  */
 public class ChatMessage implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -19,10 +21,10 @@ public class ChatMessage implements Serializable {
     /**
      * Constructor de la clase ChatMessage
      *
-     * @param ClientName Nombre del cliente que envía el mensaje
-     * @param clientid Identificador del cliente que envía el mensaje
-     * @param type Tipo de mensaje
-     * @param message Contenido del mensaje
+     * @param clientName Nombre del cliente que envía el mensaje
+     * @param clientid   Identificador del cliente que envía el mensaje
+     * @param type       Tipo de mensaje
+     * @param message    Contenido del mensaje
      */
     public ChatMessage(String clientName, int clientid, MessageType type, String message) {
     	this.clientName = clientName;

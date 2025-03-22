@@ -4,6 +4,8 @@ import es.ubu.lsi.common.ChatMessage;
 
 /**
  * Interfaz de la clase cliente
+ * 
+ * @author Adrián Zamora Sánchez (azs1004@alu.ubu.es)
  */
 public interface ChatClient {
 
